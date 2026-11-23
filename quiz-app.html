@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Web Basics Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Colour tokens (light + dark) ---------- */
+  :root {
+    --paper: #EEF3F8;
+    --sheet: #FFFFFF;
+    --ink: #1A1F2B;
+    --muted: #5B6578;
+    --print: #1D3F8F;      /* OMR-sheet blue */
+    --bubble: #9DB2DA;
+    --right: #1E7A4A;
+    --right-bg: #E4F3EA;
+    --wrong: #B3261E;
+    --wrong-bg: #FBE7E5;
+    --line: #D3DCEA;
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #10151F; --sheet: #182030; --ink: #E8ECF3; --muted: #9AA5B8;
+      --print: #8FB0F5; --bubble: #4A5E86; --right: #6FD39C; --right-bg: #173325;
+      --wrong: #F28B82; --wrong-bg: #3A1D1B; --line: #2A3549;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #10151F; --sheet: #182030; --ink: #E8ECF3; --muted: #9AA5B8;
+    --print: #8FB0F5; --bubble: #4A5E86; --right: #6FD39C; --right-bg: #173325;
+    --wrong: #F28B82; --wrong-bg: #3A1D1B; --line: #2A3549;
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 1.0625rem/1.55 "Atkinson Hyperlegible", system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 2.5rem 1rem 3rem;
+  }
+  main { width: 100%; max-width: 40rem; }
+
+  h1, h2 {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+    color: var(--print);
+    line-height: 1.1;
+    margin: 0;
+  }
+  h1 { font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 800; letter-spacing: -0.02em; }
+  h2 { font-size: 1.5rem; font-weight: 600; color: var(--ink); }
+
+  .sheet {
+    background: var(--sheet);
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    padding: clamp(1.25rem, 4vw, 2.25rem);
+  }
+
+  /* ---------- Start screen ---------- */
+  .intro p { color: var(--muted); max-width: 32rem; }
+  .intro .facts { display: flex; gap: 2rem; margin: 1.5rem 0 2rem; flex-wrap: wrap; }
+  .facts div { font-size: 0.95rem; color: var(--muted); }
+  .facts strong { display: block; font: 600 1.6rem/1 "Bricolage Grotesque", sans-serif; color: var(--ink); }
+
+  label.name { display: block; font-weight: 700; margin-bottom: 0.4rem; }
+  input[type="text"] {
+    width: 100%; font: inherit; padding: 0.7rem 0.85rem;
+    border: 1.5px solid var(--bubble); border-radius: 4px;
+    background: var(--paper); color: var(--ink); margin-bottom: 1.5rem;
+  }
+
+  button {
+    font: 700 1rem "Atkinson Hyperlegible", sans-serif;
+    border: 0; border-radius: 4px; cursor: pointer;
+    padding: 0.85rem 1.4rem;
+    background: var(--print); color: var(--sheet);
+  }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.ghost { background: transparent; color: var(--print); border: 1.5px solid var(--print); }
+  :focus-visible { outline: 3px solid var(--print); outline-offset: 3px; }
+
+  /* ---------- Question screen ---------- */
+  .topbar { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem; color: var(--muted); font-size: 0.95rem; }
+  .timer { font: 600 1.15rem "Bricolage Grotesque", sans-serif; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .timer.low { color: var(--wrong); }
+  .progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-bottom: 1.75rem; }
+  .progress span { display: block; height: 100%; background: var(--print); transition: width 0.3s ease; }
+
+  .question { margin-bottom: 1.5rem; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em; background: var(--paper); padding: 0.1em 0.35em; border-radius: 3px; }
+
+  /* Options look like answer bubbles on an OMR sheet */
+  .options { list-style: none; padding: 0; margin: 0 0 1.5rem; display: grid; gap: 0.6rem; }
+  .option {
+    width: 100%; display: flex; align-items: center; gap: 0.9rem;
+    text-align: left; font-weight: 400; color: var(--ink);
+    background: transparent; border: 1.5px solid var(--line);
+    padding: 0.75rem 0.9rem;
+  }
+  .option:hover:not(:disabled) { border-color: var(--bubble); }
+  .bubble {
+    flex: none; width: 2rem; height: 2rem; border-radius: 50%;
+    border: 2px solid var(--bubble); color: var(--print);
+    display: grid; place-items: center;
+    font: 700 0.85rem "Atkinson Hyperlegible", sans-serif;
+  }
+  .option:disabled { cursor: default; opacity: 1; }
+  .option.correct { border-color: var(--right); background: var(--right-bg); }
+  .option.correct .bubble { background: var(--right); border-color: var(--right); color: var(--sheet); }
+  .option.chosen-wrong { border-color: var(--wrong); background: var(--wrong-bg); }
+  .option.chosen-wrong .bubble { background: var(--wrong); border-color: var(--wrong); color: var(--sheet); }
+
+  .feedback { min-height: 1.6rem; margin-bottom: 1rem; font-weight: 700; }
+  .feedback.ok { color: var(--right); }
+  .feedback.bad { color: var(--wrong); }
+  .actions { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .hint { color: var(--muted); font-size: 0.85rem; }
+
+  /* ---------- Result screen ---------- */
+  .score {
+    font: 800 clamp(4rem, 18vw, 7rem)/1 "Bricolage Grotesque", sans-serif;
+    color: var(--print); letter-spacing: -0.03em; margin: 0.5rem 0;
+  }
+  .score small { font-size: 0.35em; color: var(--muted); font-weight: 600; }
+  .review { list-style: none; padding: 0; margin: 2rem 0; border-top: 1.5px solid var(--line); }
+  .review li { padding: 0.9rem 0; border-bottom: 1.5px solid var(--line); }
+  .review .q { font-weight: 700; }
+  .review .a { font-size: 0.95rem; color: var(--muted); }
+  .review .mark { font-weight: 700; }
+  .review .mark.ok { color: var(--right); }
+  .review .mark.bad { color: var(--wrong); }
+  .btn-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { .progress span { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- START SCREEN -->
+  <section id="start" class="sheet intro">
+    <h1>Web Basics Quiz</h1>
+    <p>Test what you know about HTML, CSS, JavaScript and PHP. Pick one answer per question before the timer runs out.</p>
+    <div class="facts">
+      <div><strong id="factCount">10</strong>questions</div>
+      <div><strong id="factTime">20s</strong>per question</div>
+      <div><strong>1–4</strong>keys to answer</div>
+    </div>
+    <label class="name" for="playerName">Your name</label>
+    <input type="text" id="playerName" placeholder="e.g. Riya Sen" maxlength="40" autocomplete="name">
+    <button id="startBtn">Start quiz</button>
+  </section>
+
+  <!-- QUIZ SCREEN -->
+  <section id="quiz" class="sheet" hidden>
+    <div class="topbar">
+      <span id="counter">Question 1 of 10</span>
+      <span class="timer" id="timer" aria-live="off">20s</span>
+    </div>
+    <div class="progress" aria-hidden="true"><span id="bar" style="width:0%"></span></div>
+
+    <h2 class="question" id="questionText"></h2>
+    <ul class="options" id="options"></ul>
+
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+    <div class="actions">
+      <span class="hint">Press Enter for next</span>
+      <button id="nextBtn" disabled>Next question</button>
+    </div>
+  </section>
+
+  <!-- RESULT SCREEN -->
+  <section id="result" class="sheet" hidden>
+    <h2 id="resultTitle">Well done</h2>
+    <div class="score" id="scoreText">0<small>/10</small></div>
+    <p id="resultMsg"></p>
+    <ul class="review" id="review"></ul>
+    <div class="btn-row">
+      <button id="restartBtn">Take the quiz again</button>
+      <button id="homeBtn" class="ghost">Change name</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* =========================================================
+   1. QUESTION BANK
+   Each question: text, options (array), answer (index of the correct option)
+   Add or edit questions here — the rest of the app adapts automatically.
+   ========================================================= */
+const QUESTIONS = [
+  { text: "Which HTML tag is used to link an external JavaScript file?",
+    options: ["<link>", "<script>", "<js>", "<import>"], answer: 1 },
+  { text: "Which CSS property changes the text colour of an element?",
+    options: ["font-color", "text-color", "color", "foreground"], answer: 2 },
+  { text: "What does typeof null return in JavaScript?",
+    options: ["\"null\"", "\"undefined\"", "\"object\"", "\"number\""], answer: 2 },
+  { text: "Which method adds an item to the end of a JavaScript array?",
+    options: ["push()", "pop()", "shift()", "unshift()"], answer: 0 },
+  { text: "Which keyword declares a variable that cannot be reassigned?",
+    options: ["var", "let", "static", "const"], answer: 3 },
+  { text: "In PHP, every variable name starts with which symbol?",
+    options: ["#", "$", "@", "&"], answer: 1 },
+  { text: "Which SQL clause filters rows before grouping?",
+    options: ["WHERE", "HAVING", "ORDER BY", "LIMIT"], answer: 0 },
+  { text: "What does 5 + \"5\" evaluate to in JavaScript?",
+    options: ["10", "\"55\"", "NaN", "Error"], answer: 1 },
+  { text: "Which HTTP method is normally used to submit a login form securely?",
+    options: ["GET", "PUT", "POST", "HEAD"], answer: 2 },
+  { text: "Which function selects the first element matching a CSS selector?",
+    options: ["getElementById()", "querySelector()", "querySelectorAll()", "getElementsByClassName()"], answer: 1 }
+];
+
+const SECONDS_PER_QUESTION = 20;
+const LABELS = ["A", "B", "C", "D"];
+
+/* =========================================================
+   2. STATE
+   ========================================================= */
+let questions = [];      // shuffled copy for this attempt
+let current = 0;         // index of the current question
+let score = 0;
+let answers = [];        // what the player picked (-1 = time ran out)
+let timeLeft = SECONDS_PER_QUESTION;
+let timerId = null;
+let answered = false;
+let playerName = "";
+
+/* =========================================================
+   3. DOM REFERENCES
+   ========================================================= */
+const $ = (id) => document.getElementById(id);
+const screens = { start: $("start"), quiz: $("quiz"), result: $("result") };
+
+$("factCount").textContent = QUESTIONS.length;
+$("factTime").textContent = SECONDS_PER_QUESTION + "s";
+
+/* =========================================================
+   4. HELPERS
+   ========================================================= */
+function showScreen(name) {
+  for (const key in screens) screens[key].hidden = key !== name;
+}
+
+// Fisher–Yates shuffle (returns a new array)
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* =========================================================
+   5. QUIZ FLOW
+   ========================================================= */
+function startQuiz() {
+  playerName = $("playerName").value.trim() || "Student";
+  questions = shuffle(QUESTIONS);
+  current = 0;
+  score = 0;
+  answers = [];
+  showScreen("quiz");
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  answered = false;
+
+  $("counter").textContent = `Question ${current + 1} of ${questions.length}`;
+  $("bar").style.width = (current / questions.length) * 100 + "%";
+  $("questionText").textContent = q.text;
+  $("feedback").textContent = "";
+  $("feedback").className = "feedback";
+  $("nextBtn").disabled = true;
+  $("nextBtn").textContent = current === questions.length - 1 ? "See my score" : "Next question";
+
+  // Build option buttons
+  const list = $("options");
+  list.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.className = "option";
+    btn.innerHTML = `<span class="bubble">${LABELS[i]}</span><span></span>`;
+    btn.lastChild.textContent = opt;       // textContent keeps "<script>" etc. safe
+    btn.addEventListener("click", () => selectAnswer(i));
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(timerId);
+  timeLeft = SECONDS_PER_QUESTION;
+  updateTimer();
+  timerId = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerId);
+      selectAnswer(-1);   // -1 means no answer given
+    }
+  }, 1000);
+}
+
+function updateTimer() {
+  const t = $("timer");
+  t.textContent = timeLeft + "s";
+  t.classList.toggle("low", timeLeft <= 5);
+}
+
+function selectAnswer(choice) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerId);
+
+  const q = questions[current];
+  const buttons = $("options").querySelectorAll(".option");
+  answers.push(choice);
+
+  buttons.forEach((b) => (b.disabled = true));
+  buttons[q.answer].classList.add("correct");
+
+  const fb = $("feedback");
+  if (choice === q.answer) {
+    score++;
+    fb.textContent = "Correct!";
+    fb.classList.add("ok");
+  } else {
+    if (choice >= 0) buttons[choice].classList.add("chosen-wrong");
+    fb.textContent = choice === -1
+      ? `Time's up. The answer is ${LABELS[q.answer]}.`
+      : `Not quite. The answer is ${LABELS[q.answer]}.`;
+    fb.classList.add("bad");
+  }
+
+  $("nextBtn").disabled = false;
+  $("nextBtn").focus();
+}
+
+function nextQuestion() {
+  current++;
+  if (current < questions.length) loadQuestion();
+  else showResult();
+}
+
+function showResult() {
+  $("bar").style.width = "100%";
+  const total = questions.length;
+  const pct = Math.round((score / total) * 100);
+
+  $("scoreText").innerHTML = `${score}<small>/${total}</small>`;
+  $("resultTitle").textContent =
+    pct >= 80 ? `Excellent, ${playerName}` :
+    pct >= 50 ? `Good effort, ${playerName}` :
+                `Keep practising, ${playerName}`;
+  $("resultMsg").textContent = `You scored ${pct}%. Review your answers below.`;
+
+  // Answer review list
+  const review = $("review");
+  review.innerHTML = "";
+  questions.forEach((q, i) => {
+    const picked = answers[i];
+    const ok = picked === q.answer;
+    const li = document.createElement("li");
+    li.innerHTML = `<div class="q"></div><div class="a"></div><div class="mark ${ok ? "ok" : "bad"}"></div>`;
+    li.children[0].textContent = `${i + 1}. ${q.text}`;
+    li.children[1].textContent = ok
+      ? `Your answer: ${q.options[picked]}`
+      : `Your answer: ${picked === -1 ? "no answer" : q.options[picked]}  ·  Correct: ${q.options[q.answer]}`;
+    li.children[2].textContent = ok ? "Correct" : "Wrong";
+    review.appendChild(li);
+  });
+
+  showScreen("result");
+}
+
+/* =========================================================
+   6. EVENTS
+   ========================================================= */
+$("startBtn").addEventListener("click", startQuiz);
+$("playerName").addEventListener("keydown", (e) => { if (e.key === "Enter") startQuiz(); });
+$("nextBtn").addEventListener("click", nextQuestion);
+$("restartBtn").addEventListener("click", startQuiz);
+$("homeBtn").addEventListener("click", () => { showScreen("start"); $("playerName").focus(); });
+
+// Keyboard: 1–4 or A–D to answer, Enter for next
+document.addEventListener("keydown", (e) => {
+  if (screens.quiz.hidden) return;
+  const k = e.key.toLowerCase();
+  const idx = "1234".indexOf(k) >= 0 ? "1234".indexOf(k) : "abcd".indexOf(k);
+  if (!answered && idx >= 0 && idx < questions[current].options.length) selectAnswer(idx);
+  else if (answered && k === "enter" && document.activeElement !== $("nextBtn")) nextQuestion();
+});
+</script>
+</body>
+</html>
